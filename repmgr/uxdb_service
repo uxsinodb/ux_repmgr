@@ -1,0 +1,120 @@
+#! /bin/sh
+
+# chkconfig: 2345 98 02
+# description: UXDB RDBMS
+
+# Proper init scripts on Linux systems normally require setting lock
+# and pid files under /var/run as well as reacting to network
+# settings, so you should treat this with care.
+
+
+# contrib/start-scripts/linux
+
+## EDIT FROM HERE
+
+# Installation prefix
+prefix=/home/uxdb/uxdbinstall/dbsql
+
+# Data directory
+UXDATA="/home/uxdb/uxdata"
+
+# Who to run the postmaster as, usually "uxdb".  (NOT "root")
+UXUSER=uxdb
+
+# whoami
+WHO=`whoami`
+
+
+# Get the aliases and functions
+if [ -f ~/.bashrc ]; then
+        . ~/.bashrc
+fi
+
+# User specific environment and startup uxdb
+
+export UXDB_HOME=/home/uxdb/uxdbinstall/dbsql
+
+PATH=$PATH:$HOME/.local/bin:$HOME/bin:$UXDB_HOME/bin
+
+export LD_LIBRARY_PATH=$UXDB_HOME/lib:$LD_LIBRARY_PATH
+
+export PATH
+
+# What to use to shut down the uxdb
+UXCTL="$prefix/bin/ux_ctl"
+# 进程数
+ProcNumber=$(ps -ef|grep uxdb |grep D|grep uxdata1|wc -l)
+# Parse command line parameters.
+case $1 in
+  start)
+	ls $UXDATA/uxmaster.pid > /dev/null 2>&1 
+	if [ $? -eq 0 ] ;then echo "UXDB Service Already Start"
+		ux_pid=`ps aux | grep uxdb |grep "\-D"| grep -v grep|wc -l`
+		if [[ $WHO == "root" && $ux_pid -eq 0 ]]; then 
+		echo "UXDB Service Start..."
+	    su - $UXUSER -c "export LD_LIBRARY_PATH=$UXDB_HOME/lib:$LD_LIBRARY_PATH; $UXCTL restart -D "$UXDATA" -s -m fast"
+		elif [[ $WHO == "uxdb" && $ux_pid -eq 0 ]]; then
+		echo "UXDB Service Start..."
+		export LD_LIBRARY_PATH=$UXDB_HOME/lib:$LD_LIBRARY_PATH; $UXCTL restart -D "$UXDATA" -s -m fast
+		else echo "Use this command as root or uxdb"
+		fi
+	else 
+	    if [[ $WHO == "root" ]]; then 
+		echo "UXDB Service Start..."
+	    su - $UXUSER -c "export LD_LIBRARY_PATH=$UXDB_HOME/lib:$LD_LIBRARY_PATH; $UXCTL start -D "$UXDATA" -s -m fast"
+		elif [[ $WHO == "uxdb" ]]; then
+		echo "UXDB Service Start..."
+		export LD_LIBRARY_PATH=$UXDB_HOME/lib:$LD_LIBRARY_PATH; $UXCTL start -D "$UXDATA" -s -m fast
+		else echo "Use this command as root or uxdb"
+		fi	
+	fi
+	;;
+  stop)
+	    if [[ $WHO == "root" ]]; then 
+		echo "UXDB Service Stop..."
+	    su - $UXUSER -c "export LD_LIBRARY_PATH=$UXDB_HOME/lib:$LD_LIBRARY_PATH; $UXCTL stop -D "$UXDATA" -s -m fast"
+        elif [[ $WHO == "uxdb" ]]; then
+		echo "UXDB Service Stop..."
+		export LD_LIBRARY_PATH=$UXDB_HOME/lib:$LD_LIBRARY_PATH; $UXCTL stop -D "$UXDATA" -s -m fast
+		else echo "Use this command as root or uxdb"
+		fi
+	;;
+  restart)
+	    if [[ $WHO == "root" ]]; then 
+		echo "UXDB Service Restart..."
+	    su - $UXUSER -c "export LD_LIBRARY_PATH=$UXDB_HOME/lib:$LD_LIBRARY_PATH; $UXCTL restart -D "$UXDATA" -s -m fast -w"
+		elif [[ $WHO == "uxdb" ]]; then
+		echo "UXDB Service Restart..."
+		export LD_LIBRARY_PATH=$UXDB_HOME/lib:$LD_LIBRARY_PATH; $UXCTL restart -D "$UXDATA" -s -m fast -w
+		else echo "Use this command as root or uxdb"
+		fi
+	;;
+  reload)
+		if [[ $WHO == "root" ]]; then 
+		echo "UXDB Service Reload..."
+        su - $UXUSER -c "export LD_LIBRARY_PATH=$UXDB_HOME/lib:$LD_LIBRARY_PATH; $UXCTL reload -D "$UXDATA" -s"
+		elif [[ $WHO == "uxdb" ]]; then
+		echo "UXDB Service Reload..."
+		export LD_LIBRARY_PATH=$UXDB_HOME/lib:$LD_LIBRARY_PATH; $UXCTL reload -D "$UXDATA" -s
+		else echo "Use this command as root or uxdb"
+		fi
+        ;;
+  status)
+        if [[ $WHO == "root" ]]; then 
+	    su - $UXUSER -c "export LD_LIBRARY_PATH=$UXDB_HOME/lib:$LD_LIBRARY_PATH; $UXCTL status -D "$UXDATA""
+		elif [[ $WHO == "uxdb" ]]; then
+		export LD_LIBRARY_PATH=$UXDB_HOME/lib:$LD_LIBRARY_PATH; $UXCTL status -D "$UXDATA"
+		else echo "Use this command as root or uxdb"
+		fi
+	;;
+
+  *)
+
+     
+	# Print help
+	echo "Usage: $0 {start|stop|restart|reload|status}" 1>&2 
+	exit 1
+	;;
+esac
+
+

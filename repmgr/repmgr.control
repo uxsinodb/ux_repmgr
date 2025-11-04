@@ -1,7 +1,0 @@
-# repmgr extension
-comment = 'Replication manager for UXsinoDB'
-default_version = '5.4'
-module_pathname = '$libdir/repmgr'
-relocatable = false
-schema = repmgr
-
